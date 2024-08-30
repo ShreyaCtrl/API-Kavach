@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import request, jsonify, current_app
 from models.user import User
-import jwt
+from .before_request import decode_token_and_get_user_id
 
 def check_user_role(required_roles):
     def decorator(f):
@@ -38,16 +38,16 @@ def check_user_role(required_roles):
 
     return decorator
 
-def decode_token_and_get_user_id(token):
-    try:
-        # Decode the JWT token using the secret key
-        decoded = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=current_app.config['JWT_ALGORITHM'])
-        # Return the user ID from the decoded token
-        print(decoded)
-        return decoded.get('username')
-    except jwt.ExpiredSignatureError:
-        # Token has expired
-        return None
-    except jwt.InvalidTokenError:
-        # Invalid token
-        return None
+# def decode_token_and_get_user_id(token):
+#     try:
+#         # Decode the JWT token using the secret key
+#         decoded = jwt.decode(token, current_app.config['JWT_SECRET_KEY'], algorithms=current_app.config['JWT_ALGORITHM'])
+#         # Return the user ID from the decoded token
+#         print(decoded)
+#         return decoded.get('username')
+#     except jwt.ExpiredSignatureError:
+#         # Token has expired
+#         return None
+#     except jwt.InvalidTokenError:
+#         # Invalid token
+#         return None

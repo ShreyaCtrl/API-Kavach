@@ -3,7 +3,7 @@ from flask_cors import CORS
 from config import MONGO_URL, JWT_SECRET_KEY, JWT_ALGORITHM, JWT_EXPIRATION_DELTA, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 from routes.authenticate import authenticate
 from aws import api_gateway_client, logs_client
-from routes.api_routes import api
+from routes.api_routes import api_bp
 
 print(MONGO_URL)
 app = Flask(__name__)
@@ -26,7 +26,7 @@ print(api_gateway_client, logs_client)
 # print(db.server_info())
 
 app.register_blueprint(authenticate)
-app.register_blueprint(api)
+app.register_blueprint(api_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)
