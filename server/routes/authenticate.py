@@ -15,9 +15,9 @@ def login():
 
         # Check if user exists
         user = user_collection.find_user_by_username(data['username'])[0]
-        print("Provided password:", data['password'])
-        print("Stored hashed password:", user['password'])
-        print("Password match:", bcrypt.checkpw(data['password'].encode('utf-8'), user['password']))
+        # print("Provided password:", data['password'])
+        # print("Stored hashed password:", user['password'])
+        # print("Password match:", bcrypt.checkpw(data['password'].encode('utf-8'), user['password']))
         # b = user and bcrypt.checkpw(data['password'].encode('utf-8'), user['password'])
         # print(current_app.config['JWT_EXPIRATION_'])
         # print(current_app.config['JWT_ALGORITHM'])
@@ -101,23 +101,3 @@ def signup():
         }), 500
 
 
-def token_required(f):
-    """Decorator to protect routes requiring authentication"""
-    from functools import wraps
-
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({"message": "Token is missing!"}), 403
-
-        try:
-            data = jwt.decode(token, current_app.config['JWT_SECRET_KEY'],
-                              algorithms=[current_app.config['JWT_ALGORITHM']])
-            current_user = data['username']
-        except Exception as e:
-            return jsonify({"message": "Invalid or expired token!"}), 403
-
-        return f(current_user, *args, **kwargs)
-
-    return decorated
