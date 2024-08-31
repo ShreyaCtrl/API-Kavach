@@ -19,7 +19,6 @@ function Login() {
             <div className='flex w-screen items-center justify-evenly'> 
             <img src={logo} alt="Logo of API Kavach" className="h-80"/>
             <Credentials/>
-
             </div>
             
           </div>

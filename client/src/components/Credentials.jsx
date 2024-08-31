@@ -1,16 +1,19 @@
 import React, {useState} from 'react'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom';
 
 function Credentials() {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+     //registered = false;
+    let navigate = useNavigate();
 
     const handleLogin = () => {
         // Check if entered email and password match any sample user data
         const data = {
-          username: email,
+          username: username,
           password: password,
           role: role
         };
@@ -30,6 +33,12 @@ function Credentials() {
                 console.log(response.data);
                 if (response.data.status === 200) {
                     setErrorMessage('');
+                    // registered =true;
+                    // if (registered)
+                    // {
+                      // return <Navigate to="/dashboard" replace />;
+                      navigate('/dashboard', { replace: true });
+                    // }
                     // Handle successful login (e.g., redirect to another page)
                 } else {
                     setErrorMessage(response.message);
@@ -44,7 +53,7 @@ function Credentials() {
     const handleSignup = () => {
       // Check if entered email and password match any sample user data
       const data = {
-        username: email,
+        username: username,
         password: password,
         role: role
       };
@@ -54,6 +63,9 @@ function Credentials() {
                 console.log(response.data);
                 if (response.data.status === 201) {
                     setErrorMessage('');
+                    // registered = true;
+                    // return <Navigate to="/dashboard" replace />;
+                    navigate('/dashboard', { replace: true });
                     // Handle successful login (e.g., redirect to another page)
                 } else if (response.data.status === 400) {
                     setErrorMessage(response.message);
@@ -67,6 +79,7 @@ function Credentials() {
 
 
 
+
   return (
     <div className='flex items-center justify-center h-screen w-1/3 z-10 float-right'>
     <div className='p-6'>
@@ -75,10 +88,10 @@ function Credentials() {
         <label className ='text-left text-white'>Username</label>
         <div>
             <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="form-input w-full h-10 bg-gray-100 text-black rounded-md p-2 shadow shadow-violet-200"
                 placeholder="Enter your username"
                 required
@@ -116,8 +129,8 @@ function Credentials() {
                 <option value="">Select your role</option>
                 <option value="Developer">Developer</option>
                 <option value="Tester">Tester</option>
-                <option value="DevOpsEngineer">DevOps Engineer</option>
-                <option value="Admin">Admin</option>
+                <option value="DevOps Engineer">DevOps Engineer</option>
+                <option value="Administrator">Administrator</option>
 
                 </select>
             </div>
