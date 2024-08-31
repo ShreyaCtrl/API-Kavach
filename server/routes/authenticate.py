@@ -79,7 +79,8 @@ def signup():
         # Create new user
         user_id = user_collection.create_user({
             'username': data['username'],
-            'password': hashed_password
+            'password': hashed_password,
+            'role': data['role']
         })
 
         return jsonify({
