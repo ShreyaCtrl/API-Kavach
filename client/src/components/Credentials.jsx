@@ -1,12 +1,17 @@
 import React, {useState} from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
+import Notification from './Notification';
+import { toast, Toaster } from 'sonner';
 
 function Credentials() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [message, setMessage] = useState('');
+    const [type, setType] = useState('');
+    const [notification, setNotification] = useState({ message: '', type: '' });
      //registered = false;
     let navigate = useNavigate();
 
@@ -33,20 +38,21 @@ function Credentials() {
                 console.log(response.data);
                 if (response.data.status === 200) {
                     setErrorMessage('');
-                    // registered =true;
-                    // if (registered)
-                    // {
-                      // return <Navigate to="/dashboard" replace />;
-                      navigate('/dashboard', { replace: true });
-                    // }
-                    // Handle successful login (e.g., redirect to another page)
+                    // setNotification({ message: 'Login Successful!', type: 'success' });
+                    // toast.success('Login Successful');
+                    // navigate('/dashboard', { replace: true });
+                    localStorage.setItem('token', response.data.token);
+                    navigate('/dashboard', { state: { message: 'Login Successful!', type: 'success' } });
                 } else {
-                    setErrorMessage(response.message);
+                  setErrorMessage(response.message);
+                  setNotification({ message: response.data.message, type: 'error' });
+
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 setErrorMessage('Login Failed');
+                setNotification({ message: 'Login Failed', type: 'error' });
             });
     };
 
@@ -63,17 +69,18 @@ function Credentials() {
                 console.log(response.data);
                 if (response.data.status === 201) {
                     setErrorMessage('');
-                    // registered = true;
-                    // return <Navigate to="/dashboard" replace />;
-                    navigate('/dashboard', { replace: true });
-                    // Handle successful login (e.g., redirect to another page)
+                    localStorage.setItem('token', response.data.token);
+                    navigate('/dashboard', { state: { message: 'Signup Successful!', type: 'success' } });
                 } else if (response.data.status === 400) {
                     setErrorMessage(response.message);
+                    setNotification({ message: response.data.message, type: 'error' });
+
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 setErrorMessage('Sign up failed');
+                setNotification({ message: 'Signup Failed', type: 'error' });
             });
     };
 
@@ -124,7 +131,7 @@ function Credentials() {
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="form-input w-full h-10 bg-gray-100 text-gray-600 rounded-md p-2 shadow shadow-violet-200 text-md"
-                // placeholder="Select Role"
+                
                 required>
                 <option value="">Select your role</option>
                 <option value="Developer">Developer</option>
@@ -151,9 +158,11 @@ function Credentials() {
         
       </div>
     {errorMessage && <div className="text-red-500">{errorMessage}</div>}
-
-    </div>    
-  </div>
+    {/* <Notification message={message} type={type} />
+    <Notification message={notification.message} type={notification.type} /> */}
+    </div>  
+    {/* <Toaster position='top-right' richColors/> */}
+    </div>
   )
 }
 
