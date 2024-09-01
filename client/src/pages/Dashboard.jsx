@@ -1,9 +1,12 @@
 import React from 'react'
+import Sidebar from '../components/Sidebar'
+import ApiList from '../components/ApiList'
 
 function Dashboard() {
   return (
     <div>
-      Hi
+      <Sidebar/>
+      <ApiList/>
     </div>
   )
 }
