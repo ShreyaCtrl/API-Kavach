@@ -1,98 +1,75 @@
-from models.api import Api
-from middleware.issue_tokens import token_required
-from middleware.api_access import api_access
-from middleware.authorize import check_user_role
-from flask import request, jsonify, Blueprint
-from aws import logs_client
+from flask import Flask, jsonify, Blueprint
 from datetime import datetime, timedelta
-
-# Define the log group for the API Gateway
-LOG_GROUP_NAME = '/API-Gateway-Execution-Logs_qycpsfswxa/dev'
+import random
 
 logs = Blueprint('logs', __name__)
+def generate_dummy_data(log_group, metric_name, num_points=10):
+    now = datetime.utcnow()
+    data = {
+        "logGroup": log_group,
+        "metrics": {
+            metric_name: []
+        }
+    }
+    for i in range(num_points):
+        timestamp = now - timedelta(hours=num_points - i)
+        value = random.randint(50, 200)  # Random value for demonstration
+        data["metrics"][metric_name].append({
+            "timestamp": timestamp.isoformat() + "Z",
+            "count": value
+        })
+    return data
 
 @logs.route('/api-requests', methods=['GET'])
 def get_api_requests():
-    """
-    Fetch the number of API requests over a given time period.
-    """
-    start_time = request.args.get('start_time', (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ'))
-    end_time = request.args.get('end_time', datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'))
+    data = {
+        "/aws/apigateway/welcome": generate_dummy_data('/aws/apigateway/welcome', 'requests'),
+        "/aws/lambda/stupid-test-api": generate_dummy_data('/aws/lambda/stupid-test-api', 'requests'),
+        "/aws/lambda/test-function": generate_dummy_data('/aws/lambda/test-function', 'requests'),
+        "/aws/lambda/test-fxn": generate_dummy_data('/aws/lambda/test-fxn', 'requests'),
+        "API-Gateway-Execution-Logs_qycpsfswxa/dev": generate_dummy_data('API-Gateway-Execution-Logs_qycpsfswxa/dev', 'requests')
+    }
+    return jsonify(data)
 
-    response = logs_client.filter_log_events(
-        logGroupName=LOG_GROUP_NAME,
-        startTime=int(datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%SZ').timestamp() * 1000),
-        endTime=int(datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%SZ').timestamp() * 1000),
-        filterPattern='"HTTPMethod" "RequestId"'
-    )
-
-    requests_count = len(response.get('events', []))
-
-    return jsonify({'requests_count': requests_count, 'start_time': start_time, 'end_time': end_time})
-
-@logs.route('/api/errors', methods=['GET'])
+@logs.route('/api-errors', methods=['GET'])
 def get_api_errors():
-    """
-    Fetch the number of errors (4xx and 5xx) within a given time period.
-    """
-    start_time = request.args.get('start_time', (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ'))
-    end_time = request.args.get('end_time', datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'))
+    data = {
+        "/aws/apigateway/welcome": generate_dummy_data('/aws/apigateway/welcome', 'errors'),
+        "/aws/lambda/stupid-test-api": generate_dummy_data('/aws/lambda/stupid-test-api', 'errors'),
+        "/aws/lambda/test-function": generate_dummy_data('/aws/lambda/test-function', 'errors'),
+        "/aws/lambda/test-fxn": generate_dummy_data('/aws/lambda/test-fxn', 'errors'),
+        "API-Gateway-Execution-Logs_qycpsfswxa/dev": generate_dummy_data('API-Gateway-Execution-Logs_qycpsfswxa/dev', 'errors')
+    }
+    return jsonify(data)
 
-    response = logs_client.filter_log_events(
-        logGroupName=LOG_GROUP_NAME,
-        startTime=int(datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%SZ').timestamp() * 1000),
-        endTime=int(datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%SZ').timestamp() * 1000),
-        filterPattern='"status": "4" || "status": "5"'
-    )
-
-    errors_count = len(response.get('events', []))
-
-    return jsonify({'errors_count': errors_count, 'start_time': start_time, 'end_time': end_time})
-
-@logs.route('/api/latency', methods=['GET'])
+@logs.route('/api-latency', methods=['GET'])
 def get_api_latency():
-    """
-    Fetch average API latency over a given time period.
-    """
-    start_time = request.args.get('start_time', (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ'))
-    end_time = request.args.get('end_time', datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'))
+    data = {
+        "/aws/apigateway/welcome": generate_dummy_data('/aws/apigateway/welcome', 'latency'),
+        "/aws/lambda/stupid-test-api": generate_dummy_data('/aws/lambda/stupid-test-api', 'latency'),
+        "/aws/lambda/test-function": generate_dummy_data('/aws/lambda/test-function', 'latency'),
+        "/aws/lambda/test-fxn": generate_dummy_data('/aws/lambda/test-fxn', 'latency'),
+        "API-Gateway-Execution-Logs_qycpsfswxa/dev": generate_dummy_data('API-Gateway-Execution-Logs_qycpsfswxa/dev', 'latency')
+    }
+    # Add average latency to each log group
+    for log_group_data in data.values():
+        for entry in log_group_data["metrics"]["latency"]:
+            entry["averageLatency"] = random.randint(100, 300)  # Random average latency value
+    return jsonify(data)
 
-    response = logs_client.filter_log_events(
-        logGroupName=LOG_GROUP_NAME,
-        startTime=int(datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%SZ').timestamp() * 1000),
-        endTime=int(datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%SZ').timestamp() * 1000),
-        filterPattern='"integrationLatency"'
-    )
-
-    latencies = []
-    for event in response.get('events', []):
-        log_message = event['message']
-        latency_value = int(log_message.split('"integrationLatency":')[1].split(',')[0].strip())
-        latencies.append(latency_value)
-
-    average_latency = sum(latencies) / len(latencies) if latencies else 0
-
-    return jsonify({'average_latency': average_latency, 'start_time': start_time, 'end_time': end_time})
-
-@logs.route('/api/status-codes', methods=['GET'])
-def get_status_codes_distribution():
-    """
-    Fetch the distribution of HTTP status codes within a given time period.
-    """
-    start_time = request.args.get('start_time', (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%SZ'))
-    end_time = request.args.get('end_time', datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'))
-
-    response = logs_client.filter_log_events(
-        logGroupName=LOG_GROUP_NAME,
-        startTime=int(datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%SZ').timestamp() * 1000),
-        endTime=int(datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%SZ').timestamp() * 1000),
-        filterPattern='"status"'
-    )
-
-    status_codes = {}
-    for event in response.get('events', []):
-        log_message = event['message']
-        status_code = log_message.split('"status":')[1].split(',')[0].strip()
-        status_codes[status_code] = status_codes.get(status_code, 0) + 1
-
-    return jsonify({'status_codes_distribution': status_codes, 'start_time': start_time, 'end_time': end_time})
+@logs.route('/api-status-codes', methods=['GET'])
+def get_api_status_codes():
+    statuses = [200, 400, 500]
+    data = {
+        "/aws/apigateway/welcome": generate_dummy_data('/aws/apigateway/welcome', 'statusCodes'),
+        "/aws/lambda/stupid-test-api": generate_dummy_data('/aws/lambda/stupid-test-api', 'statusCodes'),
+        "/aws/lambda/test-function": generate_dummy_data('/aws/lambda/test-function', 'statusCodes'),
+        "/aws/lambda/test-fxn": generate_dummy_data('/aws/lambda/test-fxn', 'statusCodes'),
+        "API-Gateway-Execution-Logs_qycpsfswxa/dev": generate_dummy_data('API-Gateway-Execution-Logs_qycpsfswxa/dev', 'statusCodes')
+    }
+    # Add random status codes and counts to each log group
+    for log_group_data in data.values():
+        for entry in log_group_data["metrics"]["statusCodes"]:
+            entry["statusCode"] = random.choice(statuses)
+            entry["count"] = random.randint(0, 20)  # Random count for each status code
+    return jsonify(data)
