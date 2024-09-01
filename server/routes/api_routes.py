@@ -123,30 +123,24 @@ def check_new_apis(args, current_user):
 
 
 @api_bp.route('/list-apis', methods=['GET'])
-@check_user_role(['Administrator', 'DevOps Engineer', 'Developer', 'Tester'])
-@token_required
-def list_apis(current_user):
+# @check_user_role(['Administrator', 'DevOps Engineer', 'Developer', 'Tester'])
+# @token_required
+# current_user
+def list_apis():
     try:
-        # Fetch all APIs
-        response = api_gateway_client.get_rest_apis()
+        # Fetch all APIs from MongoDB
+        apis_collection = Api()
+        api_documents = apis_collection.get_all_apis()
 
         api_details = []
-        for api in response.get('items', []):
-            # Fetch stages for each API
-            stages_response = api_gateway_client.get_stages(restApiId=api['id'])
-            stages = stages_response.get('item', [])
-
-            # Collect stage names
-            stage_names = [stage['stageName'] for stage in stages]
-
-            # Add API details along with stages
+        for api in api_documents:
             api_details.append({
-                'id': api['id'],
+                'id': str(api['_id']),
                 'name': api['name'],
                 'description': api.get('description', 'No description provided'),
-                'createdDate': api['createdDate'].strftime('%Y-%m-%d %H:%M:%S'),
+                'createdDate': api['createdDate'],
                 'version': api.get('version', 'N/A'),
-                'stages': stage_names  # Include stages
+                'stages': api.get('stages', [])  # Include stages
             })
 
         return jsonify({
@@ -165,3 +159,42 @@ def list_apis(current_user):
             'statusText': 'Internal Server Error',
             'mime-type': 'application/json'
         }), 500
+    # try:
+    #     # Fetch all APIs
+    #     response = api_gateway_client.get_rest_apis()
+    #
+    #     api_details = []
+    #     for api in response.get('items', []):
+    #         # Fetch stages for each API
+    #         stages_response = api_gateway_client.get_stages(restApiId=api['id'])
+    #         stages = stages_response.get('item', [])
+    #
+    #         # Collect stage names
+    #         stage_names = [stage['stageName'] for stage in stages]
+    #
+    #         # Add API details along with stages
+    #         api_details.append({
+    #             'id': api['id'],
+    #             'name': api['name'],
+    #             'description': api.get('description', 'No description provided'),
+    #             'createdDate': api['createdDate'].strftime('%Y-%m-%d %H:%M:%S'),
+    #             'version': api.get('version', 'N/A'),
+    #             'stages': stage_names  # Include stages
+    #         })
+    #
+    #     return jsonify({
+    #         'message': 'APIs fetched successfully',
+    #         'apis': api_details,
+    #         'status': 200,
+    #         'statusText': 'OK',
+    #         'mime-type': 'application/json'
+    #     }), 200
+    #
+    # except Exception as e:
+    #     return jsonify({
+    #         'message': 'Failed to fetch APIs',
+    #         'error': str(e),
+    #         'status': 500,
+    #         'statusText': 'Internal Server Error',
+    #         'mime-type': 'application/json'
+    #     }), 500

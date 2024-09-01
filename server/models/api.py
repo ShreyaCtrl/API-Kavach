@@ -2,7 +2,6 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from flask import current_app
 
-
 class Api:
     def __init__(self):
         try:

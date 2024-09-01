@@ -5,4 +5,4 @@ WORKDIR /
 
 EXPOSE 5000
 
-CMD ["zap-baseline.py", "-t", "http://localhost:8081", "-r", "zap_report.html"]
+CMD ["zap-baseline.py", "-t", "http://localhost:80", "-r", "zap_report.html"]
